@@ -50,7 +50,17 @@ public class Agenda {
 		this.c = DriverManager.getConnection(url);
 		this.st = c.createStatement();
 
-		
+		try {
+			String sql = "CREATE TABLE agenda " +
+					"(usuario VARCHAR(100) not NULL, " +
+					" nombre VARCHAR(100), " +
+					" telefono VARCHAR(100), " +
+					" edad INTEGER, " +
+					" PRIMARY KEY ( usuario ))";
+			this.st.executeUpdate(sql);
+		} catch (SQLException e) {
+
+		}
 
 	}
 

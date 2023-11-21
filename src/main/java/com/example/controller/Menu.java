@@ -110,7 +110,7 @@ public class Menu {
 	 * @throws IOException
 	 */
 	public boolean menu() throws IOException {
-		IO.print("Alta|Baja|Modifica|Consulta|Listado|Todo|Salir");
+		IO.print("Alta|Baja|Modifica|Consulta|Listado|Salir");
 		switch (IO.readUpperChar()) {
 			case 'A':
 				if (alta()) {
