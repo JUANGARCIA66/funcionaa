@@ -49,6 +49,9 @@ public class Agenda {
 	public Agenda() throws IOException, SQLException {
 		this.c = DriverManager.getConnection(url);
 		this.st = c.createStatement();
+
+		
+
 	}
 
 	/**
