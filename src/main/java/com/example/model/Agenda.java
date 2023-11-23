@@ -32,7 +32,7 @@ public class Agenda {
 	/**
 	 * Tamaño de un registro de la agenda
 	 */
-	private final String url = "jdbc:sqlite:" + "C:/Users/Juan/Desktop/funcionaa/db/prueba.db";
+	private final String url = "jdbc:sqlite:" + "sqlite/agenda.db";
 
 	/**
 	 * Fichero de datos de la agenda
@@ -43,12 +43,12 @@ public class Agenda {
 	 * 
 	 * @throws IOException
 	 */
-	public Connection c;
+	public Connection cn;
 	public Statement st;
 
 	public Agenda() throws IOException, SQLException {
-		this.c = DriverManager.getConnection(url);
-		this.st = c.createStatement();
+		this.cn = DriverManager.getConnection(url);
+		this.st = cn.createStatement();
 
 		try {
 			String sql = "CREATE TABLE agenda " +
@@ -70,9 +70,14 @@ public class Agenda {
 	 * @param c
 	 * @throws IOException
 	 */
-	public boolean create(Contacto c) throws IOException {
-		write(c);
-		return true;
+	public boolean create(Contacto c) {
+		try {
+			write(c);
+			return true;
+		} catch (IOException | SQLException e) {
+			// TODO Auto-generated catch block
+			return false;
+		}
 	}
 
 	/**
@@ -85,7 +90,7 @@ public class Agenda {
 	public Contacto read(String usuarioBuscar) throws IOException {
 		ResultSet rs;
 		try {
-			PreparedStatement ps = this.c.prepareStatement("select * from agenda WHERE usuario = ?;");
+			PreparedStatement ps = this.cn.prepareStatement("select * from agenda WHERE usuario = ?;");
 			ps.setString(1, usuarioBuscar);
 			rs = ps.executeQuery();
 			while (rs.next()) {
@@ -118,7 +123,7 @@ public class Agenda {
 		}
 		PreparedStatement ps;
 		try {
-			ps = this.c.prepareStatement("UPDATE agenda SET nombre = ?, telefono = ?, edad = ? WHERE usuario = ? ");
+			ps = this.cn.prepareStatement("UPDATE agenda SET nombre = ?, telefono = ?, edad = ? WHERE usuario = ? ");
 			ps.setString(1, c.getNombre());
 			ps.setString(2, c.getTelefono());
 			ps.setInt(3, c.getEdad());
@@ -126,16 +131,16 @@ public class Agenda {
 
 			int filasModificadas = ps.executeUpdate();
 			if (filasModificadas > 0) {
-				System.out.println("¡Alumno modificado exitosamente!");
+				return true;
 			} else {
-				System.out.println("No se pudo modificar el alumno.");
+				return false;
 			}
 
 		} catch (SQLException e) {
 			e.printStackTrace();
-			System.out.println("No se pudo modificar el alumnno");
+			System.out.println("No se pudo modificar el usuario");
+			return false;
 		}
-		return true;
 	}
 
 	/**
@@ -149,7 +154,7 @@ public class Agenda {
 
 		PreparedStatement ps;
 		try {
-			ps = c.prepareStatement("DELETE FROM agenda WHERE usuario = ?");
+			ps = cn.prepareStatement("DELETE FROM agenda WHERE usuario = ?");
 			ps.setString(1, usuario);
 			int filasBorradas = ps.executeUpdate();
 			if (filasBorradas > 0) {
@@ -169,27 +174,20 @@ public class Agenda {
 	 * 
 	 * @param c
 	 * @throws IOException
+	 * @throws SQLException
 	 */
-	private void write(Contacto c) throws IOException {
-		PreparedStatement ps;
-		try {
-			ps = this.c.prepareStatement("INSERT INTO agenda (usuario, nombre, telefono, edad) VALUES (?, ?, ?, ?)");
-			ps.setString(1, c.getUsuario());
-			ps.setString(2, c.getNombre());
-			ps.setString(3, c.getTelefono());
-			ps.setInt(4, c.getEdad());
+	private void write(Contacto c) throws IOException, SQLException {
 
-			int filasInsertadas = ps.executeUpdate();
-			if (filasInsertadas > 0) {
-				System.out.println("¡Fila insertada exitosamente!");
-			} else {
-				System.out.println("No se pudo insertar la fila.");
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.out.println("No se pudo insertar la fila.");
-		}
+		PreparedStatement ps;
+
+		ps = this.cn.prepareStatement("INSERT INTO agenda (usuario, nombre, telefono, edad) VALUES (?, ?, ?, ?)");
+		ps.setString(1, c.getUsuario());
+		ps.setString(2, c.getNombre());
+		ps.setString(3, c.getTelefono());
+		ps.setInt(4, c.getEdad());
+
+		ps.executeUpdate();
+
 	}
 
 	/**
@@ -228,7 +226,7 @@ public class Agenda {
 	 * @throws SQLException
 	 */
 	public void close() throws IOException, SQLException {
-		this.c.close();
+		this.cn.close();
 		this.st.close();
 
 	}
