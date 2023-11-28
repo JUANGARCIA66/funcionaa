@@ -1,14 +1,18 @@
 package com.example.model;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 import com.example.classes.Contacto;
+import com.example.utils.Util;
 
 /**
  * Agenda
@@ -33,33 +37,281 @@ public class Agenda {
 	 * Tamaño de un registro de la agenda
 	 */
 	private final String url = "jdbc:sqlite:" + "sqlite/agenda.db";
+	/**
+	 * Ruta del fichero que almacena la agenda
+	 */
+	private final String FIL_AGENDA = "./agenda.fijo.dat";
+
+	/**
+	 * Marca de registro borrado
+	 */
+	private final String MRK_DELETED = "#";
+
+	/**
+	 * Longitud del campo usuario
+	 */
+	private final int LEN_USUARIO = 10;
+
+	/**
+	 * Longitud del campo nombre
+	 */
+	private final int LEN_NOMBRE = 100;
+
+	/**
+	 * Longitud del campo telefono
+	 */
+	private final int LEN_TELEFONO = 13;
+
+	private final int LEN_CURSO = 20;
+	/**
+	 * Tamaño de un registro de la agenda
+	 */
+	private final int LEN_REGISTRO = LEN_USUARIO + Short.BYTES
+			+ LEN_NOMBRE + Short.BYTES
+			+ LEN_TELEFONO + Short.BYTES
+			+ LEN_CURSO + Short.BYTES
+			+ Integer.BYTES;
 
 	/**
 	 * Fichero de datos de la agenda
 	 */
+	private RandomAccessFile fichero;
+	public Connection cn;
+	public Statement st;
+
+	public static String borrar = "DROP TABLE IF EXISTS agenda";
+	public static String crear = "CREATE TABLE agenda " +
+			"(usuario VARCHAR(100) not NULL, " +
+			" nombre VARCHAR(100), " +
+			" telefono VARCHAR(100), " +
+			" edad INTEGER, " +
+			" curso VARCHAR(100)," +
+			" PRIMARY KEY ( usuario ))";
+
+	public Agenda() throws IOException {
+		fichero = new RandomAccessFile(FIL_AGENDA, "rw");
+	}
+
+	/**
+	 * Añade un contacto a la agenda
+	 * 
+	 * @param c
+	 * @throws IOException
+	 */
+	public boolean create(Contacto c) throws IOException {
+		long posicion = fichero.length();
+		fichero.seek(posicion);
+		write(c);
+		return true;
+	}
+
+	/**
+	 * Devuelve el contacto de la agenda que corresponde al usuario
+	 * 
+	 * @param usuario
+	 * @return contacto correspondiente al usuario o null si no existe
+	 * @throws IOException
+	 */
+	public Contacto read(String usuario) throws IOException {
+		long posicion = 0L;
+		fichero.seek(posicion);
+		while (fichero.getFilePointer() < fichero.length()) {
+			Contacto c = read();
+			if (c != null && c.getUsuario().equals(usuario)) {
+				return c;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Actualiza un registro
+	 * 
+	 * @param Contacto
+	 * @return true si actualizado
+	 * @throws IOException
+	 */
+	public boolean update(Contacto c) throws IOException {
+		Contacto buscado = read(c.getUsuario());
+		if (buscado == null) {
+			return false;
+		}
+		fichero.seek(fichero.getFilePointer() - LEN_REGISTRO);
+		write(c);
+		return true;
+	}
+
+	public boolean _update(Contacto c) throws IOException {
+		long posicion = 0L;
+		fichero.seek(posicion);
+		while (fichero.getFilePointer() < fichero.length()) {
+			posicion = fichero.getFilePointer();
+			Contacto r = read();
+			if (r != null && r.getUsuario().equals(c.getUsuario())) {
+				fichero.seek(posicion);
+				write(c);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Marca como borrado un registro de la agenda
+	 * 
+	 * @param usuario
+	 * @return true si borrado
+	 * @throws IOException
+	 */
+	public boolean delete(String usuario) throws IOException {
+		long posicion = 0L;
+		fichero.seek(posicion);
+		while (fichero.getFilePointer() < fichero.length()) {
+			posicion = fichero.getFilePointer();
+			Contacto r = read();
+			if (r != null && r.getUsuario().equals(usuario)) {
+				fichero.seek(posicion);
+				fichero.writeUTF(Util.format(MRK_DELETED, LEN_USUARIO));
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Escribe un contacto en la agenda
+	 * 
+	 * @param c
+	 * @throws IOException
+	 */
+	private void write(Contacto c) throws IOException {
+		fichero.writeUTF(Util.format(c.getUsuario(), LEN_USUARIO));
+		fichero.writeUTF(Util.format(c.getNombre(), LEN_NOMBRE));
+		fichero.writeUTF(Util.format(c.getTelefono(), LEN_TELEFONO));
+		fichero.writeUTF(Util.format(c.getCurso(), LEN_CURSO));
+		fichero.writeInt(c.getEdad());
+	}
+
+	/**
+	 * Lee un contacto de la agenda
+	 * 
+	 * @return Contacto o null si está borrado
+	 * @throws IOException
+	 */
+	private Contacto read() throws IOException {
+		Contacto c = new Contacto(
+				fichero.readUTF(),
+				fichero.readUTF(),
+				fichero.readUTF(),
+				fichero.readUTF(),
+				fichero.readInt());
+		return c.getUsuario().equals(MRK_DELETED) ? null : c;
+	}
+
+	/**
+	 * Lista todos los contactos activos
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
+	public String list() throws IOException {
+		String out = "";
+		long posicion = 0L;
+		fichero.seek(posicion);
+		while (fichero.getFilePointer() < fichero.length()) {
+			Contacto r = read();
+			if (r != null) {
+				out += r + "\n";
+			}
+		}
+		return out;
+	}
+
+	public ArrayList<Contacto> list_contacto() {
+		ArrayList<Contacto> ac = new ArrayList<Contacto>();
+		long posicion = 0L;
+		try {
+			fichero.seek(posicion);
+			while (fichero.getFilePointer() < fichero.length()) {
+				Contacto r = read();
+				if (r != null) {
+					ac.add(r);
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return ac;
+	}
+
+	/**
+	 * Cierra la agenda
+	 * 
+	 * @throws IOException
+	 */
+	public void close() throws IOException {
+		fichero.close();
+	}
+
+	/**
+	 * DEBUG: Limpia el fichero de datos y añade algunos registros
+	 * 
+	 * @throws IOException
+	 */
+	public void init() throws IOException {
+		fichero.close();
+		File agenda = new File(FIL_AGENDA);
+		agenda.delete();
+		agenda.createNewFile();
+		fichero = new RandomAccessFile(agenda, "rw");
+
+		create(new Contacto("luis", "Luis Rato", "34612345678", "Base de datos", 27));
+		create(new Contacto("ana", "Ana Mota", "915432145", "Interfaces", 34));
+		create(new Contacto("pepe", "Pepe Botella", "915432145", "Historia", 55));
+	}
+
+	/**
+	 * DEBUG: Muestra toda la agenda incluyendo borrados
+	 * 
+	 * @throws IOException
+	 */
+	public void listRaw() throws IOException {
+		String debug = "";
+
+		fichero.seek(0L);
+		while (fichero.getFilePointer() < fichero.length()) {
+			Contacto c = read();
+			debug += "\n" + (c == null ? "#borrado#" : c);
+		}
+
+		System.err.println("\n[[ DEBUG >> \n" + debug + "\n >> DEBUG ]]\n");
+	}
 
 	/**
 	 * Constructor
 	 * 
 	 * @throws IOException
 	 */
-	public Connection cn;
-	public Statement st;
-
-	public Agenda() throws IOException, SQLException {
-		this.cn = DriverManager.getConnection(url);
-		this.st = cn.createStatement();
-
+	public boolean trasferir() {
 		try {
-			String sql = "CREATE TABLE agenda " +
-					"(usuario VARCHAR(100) not NULL, " +
-					" nombre VARCHAR(100), " +
-					" telefono VARCHAR(100), " +
-					" edad INTEGER, " +
-					" PRIMARY KEY ( usuario ))";
-			this.st.executeUpdate(sql);
-		} catch (SQLException e) {
+			this.cn = DriverManager.getConnection(url);
+			this.st = cn.createStatement();
 
+			this.st.executeUpdate(borrar);
+			this.st.executeUpdate(crear);
+
+			ArrayList<Contacto> ac = list_contacto();
+
+			for (Contacto c : ac) {
+				create_sql(c);
+			}
+			return true;
+
+		} catch (SQLException e) {
+			System.out.println("HOLAAAA");
+			e.printStackTrace();
+			return false;
 		}
 
 	}
@@ -70,9 +322,9 @@ public class Agenda {
 	 * @param c
 	 * @throws IOException
 	 */
-	public boolean create(Contacto c) {
+	public boolean create_sql(Contacto c) {
 		try {
-			write(c);
+			write_sql(c);
 			return true;
 		} catch (IOException | SQLException e) {
 			// TODO Auto-generated catch block
@@ -87,7 +339,7 @@ public class Agenda {
 	 * @return contacto correspondiente al usuario o null si no existe
 	 * @throws IOException
 	 */
-	public Contacto read(String usuarioBuscar) throws IOException {
+	public Contacto read_sql(String usuarioBuscar) throws IOException {
 		ResultSet rs;
 		try {
 			PreparedStatement ps = this.cn.prepareStatement("select * from agenda WHERE usuario = ?;");
@@ -97,9 +349,10 @@ public class Agenda {
 				String usuario = rs.getString("usuario");
 				String nombre = rs.getString("nombre");
 				String telefono = rs.getString("telefono");
+				String curso = rs.getString("curso");
 				int edad = rs.getInt("edad");
 
-				return new Contacto(usuario, nombre, telefono, edad);
+				return new Contacto(usuario, nombre, telefono, curso, edad);
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -116,18 +369,20 @@ public class Agenda {
 	 * @return true si actualizado
 	 * @throws IOException
 	 */
-	public boolean update(Contacto c, String nombreAntiguo) throws IOException {
-		Contacto buscado = read(c.getUsuario());
+	public boolean update_sql(Contacto c, String nombreAntiguo) throws IOException {
+		Contacto buscado = read_sql(c.getUsuario());
 		if (buscado == null) {
 			return false;
 		}
 		PreparedStatement ps;
 		try {
-			ps = this.cn.prepareStatement("UPDATE agenda SET nombre = ?, telefono = ?, edad = ? WHERE usuario = ? ");
+			ps = this.cn.prepareStatement(
+					"UPDATE agenda SET nombre = ?, telefono = ?, contacto = ?, edad = ? WHERE usuario = ? ");
 			ps.setString(1, c.getNombre());
 			ps.setString(2, c.getTelefono());
-			ps.setInt(3, c.getEdad());
-			ps.setString(4, nombreAntiguo);
+			ps.setString(3, c.getCurso());
+			ps.setInt(4, c.getEdad());
+			ps.setString(5, nombreAntiguo);
 
 			int filasModificadas = ps.executeUpdate();
 			if (filasModificadas > 0) {
@@ -150,7 +405,7 @@ public class Agenda {
 	 * @return true si borrado
 	 * @throws IOException
 	 */
-	public boolean delete(String usuario) throws IOException {
+	public boolean delete_sql(String usuario) throws IOException {
 
 		PreparedStatement ps;
 		try {
@@ -176,15 +431,17 @@ public class Agenda {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	private void write(Contacto c) throws IOException, SQLException {
+	private void write_sql(Contacto c) throws IOException, SQLException {
 
 		PreparedStatement ps;
 
-		ps = this.cn.prepareStatement("INSERT INTO agenda (usuario, nombre, telefono, edad) VALUES (?, ?, ?, ?)");
+		ps = this.cn
+				.prepareStatement("INSERT INTO agenda (usuario, nombre, telefono, curso, edad) VALUES (?, ?, ?, ?, ?)");
 		ps.setString(1, c.getUsuario());
 		ps.setString(2, c.getNombre());
 		ps.setString(3, c.getTelefono());
 		ps.setInt(4, c.getEdad());
+		ps.setString(5, c.getCurso());
 
 		ps.executeUpdate();
 
@@ -196,7 +453,7 @@ public class Agenda {
 	 * @return
 	 * @throws IOException
 	 */
-	public String list() throws IOException {
+	public String list_sql() throws IOException {
 		String out = "";
 		ResultSet rs;
 		try {
@@ -205,10 +462,11 @@ public class Agenda {
 				String usuario = rs.getString("usuario");
 				String nombre = rs.getString("nombre");
 				String telefono = rs.getString("telefono");
+				String curso = rs.getString("curso");
 				int edad = rs.getInt("edad");
 
 				out = out + ("[ Usuario = " + usuario + ", Nombre = " + nombre + ", Telefono = " + telefono
-						+ ", Edad = " + edad + "]\n");
+						+ ", Edad = " + edad + ", Curso = " + curso + "]\n");
 
 			}
 		} catch (SQLException e) {
@@ -225,35 +483,10 @@ public class Agenda {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	public void close() throws IOException, SQLException {
+	public void close_sql() throws IOException, SQLException {
 		this.cn.close();
 		this.st.close();
 
 	}
-
-	/**
-	 * DEBUG: Limpia el fichero de datos y añade algunos registros
-	 * 
-	 * @throws IOException
-	 */
-	/*
-	 * public void init() throws IOException {
-	 * this.c.close();
-	 * this.st.close();
-	 * File agenda = new File(FIL_AGENDA);
-	 * agenda.delete();
-	 * agenda.createNewFile();
-	 * // fichero = new RandomAccessFile(agenda, "rw");
-	 * 
-	 * create(new Contacto("luis", "Luis Rato", "34612345678", 27));
-	 * create(new Contacto("ana", "Ana Mota", "915432145", 34));
-	 * }
-	 */
-
-	/**
-	 * DEBUG: Muestra toda la agenda incluyendo borrados
-	 * 
-	 * @throws IOException
-	 */
 
 }

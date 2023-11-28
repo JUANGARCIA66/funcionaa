@@ -1,6 +1,7 @@
 package com.example.controller;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import com.example.io.IO;
 import com.example.model.Agenda;
@@ -24,8 +25,9 @@ public class Menu {
 	 * 
 	 * @param a
 	 * @throws IOException
+	 * @throws SQLException
 	 */
-	public Menu(Agenda a) throws IOException {
+	public Menu(Agenda a) throws IOException, SQLException {
 		this.a = a;
 		while (menu())
 			;
@@ -46,7 +48,9 @@ public class Menu {
 		String telefono = IO.readStringNotBlank();
 		IO.println("Edad ? ");
 		int edad = IO.readInt();
-		Contacto c = new Contacto(usuario, nombre, telefono, edad);
+		IO.println("Curso ? ");
+		String curso = IO.readStringNotBlank();
+		Contacto c = new Contacto(usuario, nombre, telefono, curso, edad);
 		return a.create(c);
 	}
 
@@ -76,18 +80,22 @@ public class Menu {
 		if (c == null) {
 			return false;
 		}
-		String nombreAntiguo = c.getUsuario();
+		// String nombreAntiguo = c.getUsuario(); ----> PARA SQL
 		IO.println("Nombre [" + c.getNombre() + "] ? ");
 		String nombre = IO.readString();
 		c.setNombre(nombre.isBlank() ? c.getNombre() : nombre);
 		IO.println("Tfno [" + c.getTelefono() + "] ? ");
 		String telefono = IO.readString();
 		c.setTelefono(telefono.isBlank() ? c.getTelefono() : telefono);
-		IO.println("Edad [0= " + c.getEdad() + "] ? ");
+		IO.println("Edad [ " + c.getEdad() + "] ? ");
 		int edad = IO.readInt();
 		c.setEdad(edad == 0 ? c.getEdad() : edad);
+		IO.println("Curso [" + c.getCurso() + "] ? ");
+		String curso = IO.readString();
+		c.setCurso(curso.isBlank() ? c.getCurso() : curso);
 
-		return a.update(c, nombreAntiguo);
+		// return a.update(c, nombreAntiguo); ----> PARA SQL
+		return a.update(c);
 	}
 
 	/**
@@ -108,9 +116,10 @@ public class Menu {
 	 * 
 	 * @return
 	 * @throws IOException
+	 * @throws SQLException
 	 */
-	public boolean menu() throws IOException {
-		IO.print("Alta|Baja|Modifica|Consulta|Listado|Salir");
+	public boolean menu() throws IOException, SQLException {
+		IO.print("Alta|Baja|Modifica|Consulta|Listado|Transferir|Salir");
 		switch (IO.readUpperChar()) {
 			case 'A':
 				if (alta()) {
@@ -144,6 +153,14 @@ public class Menu {
 			case 'L':
 				IO.println(a.list());
 				break;
+			case 'T':
+
+				if (transerir()) {
+					IO.println("Transferido con exito");
+				} else {
+					IO.println("Problemas al transferir");
+				}
+				break;
 
 			case 'S':
 				return false;
@@ -152,6 +169,10 @@ public class Menu {
 		}
 
 		return true;
+	}
+
+	private boolean transerir() {
+		return false;
 	}
 
 }

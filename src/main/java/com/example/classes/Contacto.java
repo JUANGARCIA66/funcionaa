@@ -17,6 +17,7 @@ public class Contacto {
 	private String nombre;
 	private String telefono;
 	private int edad;
+	private String curso;
 
 	/**
 	 * Constructor
@@ -26,10 +27,11 @@ public class Contacto {
 	 * @param telefono
 	 * @param edad
 	 */
-	public Contacto(String usuario, String nombre, String telefono, int edad) {
+	public Contacto(String usuario, String nombre, String telefono, String curso, int edad) {
 		this.usuario = usuario.trim();
 		this.nombre = nombre.trim();
 		this.telefono = telefono.trim();
+		this.curso = curso.trim();
 		this.edad = edad;
 	}
 
@@ -89,9 +91,17 @@ public class Contacto {
 		this.edad = edad;
 	}
 
+	public String getCurso() {
+		return curso;
+	}
+
+	public void setCurso(String curso) {
+		this.curso = curso;
+	}
+
 	@Override
 	public String toString() {
-		return "Contacto [usuario=" + usuario + ", nombre=" + nombre + ", telefono=" + telefono + ", edad=" + edad
-				+ "]";
+		return "Contacto [usuario=" + usuario + ", nombre=" + nombre + ", telefono=" + telefono +
+				", edad=" + edad + ", curso=" + curso + "]";
 	}
 }

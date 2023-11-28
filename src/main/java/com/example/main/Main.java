@@ -19,10 +19,10 @@ public class Main {
 		Agenda a;
 		try {
 			a = new Agenda();
-			// a.init(); // DEBUG
+			a.init(); // DEBUG
 			new Menu(a);
 			a.close();
-		} catch (SQLException | IOException e) {
+		} catch (IOException | SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
