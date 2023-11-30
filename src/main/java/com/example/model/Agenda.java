@@ -1,6 +1,11 @@
 package com.example.model;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.sql.Connection;
@@ -10,6 +15,25 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.DOMException;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
+import org.xml.sax.SAXException;
 
 import com.example.classes.Contacto;
 import com.example.utils.Util;
@@ -32,6 +56,8 @@ import com.example.utils.Util;
  * @author Amadeo
  */
 public class Agenda {
+
+	private static String rutaXml = "";
 
 	/**
 	 * Tamaño de un registro de la agenda
@@ -273,6 +299,50 @@ public class Agenda {
 		create(new Contacto("luis", "Luis Rato", "34612345678", "Base de datos", 27));
 		create(new Contacto("ana", "Ana Mota", "915432145", "Interfaces", 34));
 		create(new Contacto("pepe", "Pepe Botella", "915432145", "Historia", 55));
+		create(new Contacto("asdasd", "asdasdasd", "515225", "Historia", 56));
+		create(new Contacto("123", "123", "123", "Interfaces", 23));
+		create(new Contacto("1243", "1243", "1243", "Historia", 12));
+		create(new Contacto("sara", "Sara García", "611223344", "Base de datos", 25));
+		create(new Contacto("alberto", "Alberto Hernández", "622334455", "Interfaces", 30));
+		create(new Contacto("lucia", "Lucía Fernández", "633445566", "Historia", 28));
+		create(new Contacto("daniel", "Daniel Martín", "644556677", "Base de datos", 33));
+		create(new Contacto("carmen", "Carmen Pérez", "655667788", "Interfaces", 26));
+		create(new Contacto("victor", "Víctor Sánchez", "666778899", "Historia", 29));
+		create(new Contacto("patricia", "Patricia Rodríguez", "677889900", "Base de datos", 27));
+		create(new Contacto("roberto", "Roberto Gómez", "688990011", "Interfaces", 32));
+		create(new Contacto("lucas", "Lucas Martínez", "699001122", "Historia", 31));
+		create(new Contacto("silvia", "Silvia Hernández", "600112233", "Base de datos", 24));
+		create(new Contacto("javier", "Javier García", "611223344", "Interfaces", 34));
+		create(new Contacto("irene", "Irene Fernández", "622334455", "Historia", 29));
+		create(new Contacto("oscar", "Óscar Rodríguez", "633445566", "Base de datos", 26));
+		create(new Contacto("raquel", "Raquel Pérez", "644556677", "Interfaces", 31));
+		create(new Contacto("sergio", "Sergio Sánchez", "655667788", "Historia", 30));
+		create(new Contacto("eva", "Eva Rodríguez", "666778899", "Base de datos", 28));
+		create(new Contacto("alejandro", "Alejandro Gómez", "677889900", "Interfaces", 33));
+		create(new Contacto("claudia", "Claudia Martínez", "688990011", "Historia", 27));
+		create(new Contacto("manuela", "Manuela Hernández", "699001122", "Base de datos", 25));
+		create(new Contacto("diego", "Diego García", "600112233", "Interfaces", 30));
+		create(new Contacto("luisa", "Luisa Fernández", "611223344", "Matemáticas", 25));
+		create(new Contacto("carolina", "Carolina Gómez", "622334455", "Ciencias", 30));
+		create(new Contacto("sergio", "Sergio Martínez", "633445566", "Literatura", 28));
+		create(new Contacto("ana", "Ana Martín", "644556677", "Física", 33));
+		create(new Contacto("david", "David Pérez", "655667788", "Química", 26));
+		create(new Contacto("natalia", "Natalia Sánchez", "666778899", "Biología", 29));
+		create(new Contacto("juan", "Juan Rodríguez", "677889900", "Geografía", 27));
+		create(new Contacto("marina", "Marina Gómez", "688990011", "Historia del Arte", 32));
+		create(new Contacto("carlos", "Carlos Martínez", "699001122", "Música", 31));
+		create(new Contacto("lucía", "Lucía Hernández", "600112233", "Educación Física", 24));
+		create(new Contacto("javier", "Javier García", "611223344", "Informática", 34));
+		create(new Contacto("raquel", "Raquel Pérez", "622334455", "Economía", 29));
+		create(new Contacto("lucas", "Lucas Fernández", "633445566", "Dibujo", 26));
+		create(new Contacto("sara", "Sara Martín", "644556677", "Psicología", 31));
+		create(new Contacto("pablo", "Pablo Pérez", "655667788", "Filosofía", 30));
+		create(new Contacto("teresa", "Teresa Sánchez", "666778899", "Lengua", 28));
+		create(new Contacto("alberto", "Alberto Rodríguez", "677889900", "Historia Universal", 27));
+		create(new Contacto("clara", "Clara Gómez", "688990011", "Arte Dramático", 25));
+		create(new Contacto("diego", "Diego Martínez", "699001122", "Ética", 30));
+		create(new Contacto("laura", "Laura Hernández", "600112233", "Religión", 29));
+
 	}
 
 	/**
@@ -353,29 +423,83 @@ public class Agenda {
 		return null;
 	}
 
-	public boolean consultaContacto(String curso) {
-		ResultSet rs;
+	public boolean gruposCursos() {
 		try {
-			PreparedStatement ps = this.cn.prepareStatement("SELECT COUNT(*) FROM agenda WHERE curso = ?;");
-			ps.setString(1, curso);
+			ResultSet rs;
+			File xml;
+			xml = crearDocumento();
+
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder;
+
+			builder = factory.newDocumentBuilder();
+			DOMImplementation impl = builder.getDOMImplementation();
+			Document document = impl.createDocument(null, "Cursos", null);
+			document.setXmlVersion("1.0");
+			Element raiz = document.createElement("Tabla");
+
+			PreparedStatement ps = this.cn.prepareStatement("SELECT COUNT(*), curso FROM agenda GROUP BY curso;");
 			rs = ps.executeQuery();
-			String numContactos = rs.getString("COUNT(*)");
-			System.out.println(numContactos);
-			if (numContactos != null) {
-				crearXML(curso, numContactos);
-				return true;
-			} else {
-				return false;
+			while (rs.next()) {
+				String numContactos = rs.getString("COUNT(*)");
+				String curso = rs.getString("curso");
+
+				if (numContactos != null && curso != null) {
+					try {
+						Element registro = document.createElement("registro");
+						document.getDocumentElement().appendChild(raiz).appendChild(registro);
+						crearElemento("curso", curso, registro, document);
+						crearElemento("participantes", numContactos, registro, document);
+
+					} catch (DOMException e) {
+						e.printStackTrace();
+						System.err.println("Ha petao");
+					}
+				}
+
 			}
-		} catch (SQLException e) {
+			DOMSource fuente = new DOMSource(document);
+			StreamResult result = new StreamResult(xml);
+			Transformer transfor;
+
+			transfor = TransformerFactory.newInstance().newTransformer();
+			transfor.transform(fuente, result);
+			read_xml();
+			return true;
+		} catch (IOException | ParserConfigurationException | SQLException | TransformerFactoryConfigurationError
+				| TransformerException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
+
 	}
 
-	private void crearXML(String curso, String numContactos) {
+	static void crearElemento(String curso, String num, Element raiz, Document documento) {
+		Element elem = documento.createElement(curso);
+		Text text = documento.createTextNode(num);
+		raiz.appendChild(elem);
+		elem.appendChild(text);
+	}
 
+	private File crearDocumento() throws IOException {
+
+		String rutaXML = "xml/ContactoResumen.xml";
+		File xml = new File(rutaXML);
+		int numArchivo = 001;
+		while (xml.exists()) {
+			String numCeros = String.format("%03d", numArchivo);
+			rutaXML = "xml/ContactoResumen" + numCeros + ".xml";
+			xml = new File(rutaXML);
+			numArchivo++;
+		}
+
+		if (xml.createNewFile()) {
+			rutaXml = xml.getAbsolutePath();
+			return xml;
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -503,6 +627,73 @@ public class Agenda {
 		this.cn.close();
 		this.st.close();
 
+	}
+
+	public void read_xml() {
+
+		DocumentBuilderFactory factoria = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder;
+		try {
+			builder = factoria.newDocumentBuilder(); // Creamos una instancia
+			Document documento = builder.parse(new File(rutaXml)); // Y cargamos el documento xml
+			documento.getDocumentElement().normalize(); // Pone todos los nodos texto en documento
+
+			// Crea una lista con sólo los nodos empleados
+			NodeList registros = documento.getElementsByTagName("registro");
+
+			// Recorre la lista
+			for (int i = 0; i < registros.getLength(); ++i) {
+				Node reg = registros.item(i);
+				if (reg.getNodeType() == Node.ELEMENT_NODE) {
+					Element elemento = (Element) reg;
+					String curso = elemento.getElementsByTagName("curso").item(0).getTextContent();
+					int participantes = Integer
+							.valueOf(elemento.getElementsByTagName("participantes").item(0).getTextContent());
+					introducirEnTxt(curso, participantes);
+				}
+			}
+			introducirEnTxt("==============================", 0);// final del registro de xml, en el txt no se borran
+																	// los registros, se acumulan
+			leerTxt();
+		} catch (ParserConfigurationException | SAXException | IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public void introducirEnTxt(String curso, int participantes) {
+		BufferedWriter writer;
+		try {
+			writer = new BufferedWriter(new FileWriter(new File("./agendaVariable.txt"), true));
+			String out = curso + "/" + participantes + "\n";
+			writer.write(out);
+			System.out.println("Datos introducidos en txt");
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	private void leerTxt() {
+
+		BufferedReader reader;
+		try {
+			reader = new BufferedReader(new FileReader(new File("./agendaVariable.txt")));
+
+			String linea;
+			while ((linea = reader.readLine()) != null) {
+
+				String[] re = linea.split("/");
+				System.out.println("Curso: " + re[0] + ", participantes: " + re[1]);
+			}
+			System.out.println("Datos leidos en txt");
+			reader.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

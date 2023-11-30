@@ -111,13 +111,6 @@ public class Menu {
 		return c == null ? null : c.toString();
 	}
 
-	private boolean contactosCurso() {
-		IO.println("Curso a consultar ? ");
-		String curso = IO.readString();
-
-		return a.consultaContacto(curso);
-	}
-
 	/**
 	 * Menú de opciones (controlador)
 	 * 
@@ -126,7 +119,7 @@ public class Menu {
 	 * @throws SQLException
 	 */
 	public boolean menu() throws IOException, SQLException {
-		IO.print("Alta|Baja|Modifica|Consulta|Listado|Transferir|Contactos por Curso(N)|Salir");
+		IO.print("Alta|Baja|Modifica|Consulta|Listado|Hacer todo lo que pide Ricardo|Salir");
 		switch (IO.readUpperChar()) {
 			case 'A':
 				if (alta()) {
@@ -160,20 +153,12 @@ public class Menu {
 			case 'L':
 				IO.println(a.list());
 				break;
-			case 'T':
+			case 'H':
 				if (a.transferir()) {
 					IO.println("Transferido con exito");
-					System.out.println(a.list_sql());
-
+					registroXML();
 				} else {
 					IO.println("Problemas al transferir");
-				}
-				break;
-			case 'N':
-				if (contactosCurso()) {
-					IO.println("Consulta registrada en XML");
-				} else {
-					IO.println("Consulta no efectuada con exito");
 				}
 				break;
 			case 'S':
@@ -183,6 +168,11 @@ public class Menu {
 		}
 
 		return true;
+	}
+
+	private boolean registroXML() {
+		IO.println("Consulta registrada en XML");
+		return a.gruposCursos();
 	}
 
 }
