@@ -88,8 +88,12 @@ public class Agenda {
 			" curso VARCHAR(100)," +
 			" PRIMARY KEY ( usuario ))";
 
-	public Agenda() throws IOException {
+	public Agenda() throws IOException, SQLException {
 		fichero = new RandomAccessFile(FIL_AGENDA, "rw");
+		this.cn = DriverManager.getConnection(url);
+		this.st = cn.createStatement();
+		this.st.executeUpdate(borrar);
+		this.st.executeUpdate(crear);
 	}
 
 	/**
@@ -293,26 +297,13 @@ public class Agenda {
 	 * 
 	 * @throws IOException
 	 */
-	public boolean trasferir() {
-		try {
-			this.cn = DriverManager.getConnection(url);
-			this.st = cn.createStatement();
+	public boolean transferir() {
 
-			this.st.executeUpdate(borrar);
-			this.st.executeUpdate(crear);
-
-			ArrayList<Contacto> ac = list_contacto();
-
-			for (Contacto c : ac) {
-				create_sql(c);
-			}
-			return true;
-
-		} catch (SQLException e) {
-			System.out.println("HOLAAAA");
-			e.printStackTrace();
-			return false;
+		ArrayList<Contacto> ac = list_contacto();
+		for (Contacto c : ac) {
+			create_sql(c);
 		}
+		return true;
 
 	}
 
@@ -327,7 +318,7 @@ public class Agenda {
 			write_sql(c);
 			return true;
 		} catch (IOException | SQLException e) {
-			// TODO Auto-generated catch block
+
 			return false;
 		}
 	}
@@ -360,6 +351,31 @@ public class Agenda {
 		}
 
 		return null;
+	}
+
+	public boolean consultaContacto(String curso) {
+		ResultSet rs;
+		try {
+			PreparedStatement ps = this.cn.prepareStatement("SELECT COUNT(*) FROM agenda WHERE curso = ?;");
+			ps.setString(1, curso);
+			rs = ps.executeQuery();
+			String numContactos = rs.getString("COUNT(*)");
+			System.out.println(numContactos);
+			if (numContactos != null) {
+				crearXML(curso, numContactos);
+				return true;
+			} else {
+				return false;
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	private void crearXML(String curso, String numContactos) {
+
 	}
 
 	/**
@@ -440,8 +456,8 @@ public class Agenda {
 		ps.setString(1, c.getUsuario());
 		ps.setString(2, c.getNombre());
 		ps.setString(3, c.getTelefono());
-		ps.setInt(4, c.getEdad());
-		ps.setString(5, c.getCurso());
+		ps.setString(4, c.getCurso());
+		ps.setInt(5, c.getEdad());
 
 		ps.executeUpdate();
 
