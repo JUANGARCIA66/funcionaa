@@ -3,7 +3,6 @@ package com.example.model;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -447,7 +446,7 @@ public class Agenda {
 				if (numContactos != null && curso != null) {
 					try {
 						Element registro = document.createElement("registro");
-						document.getDocumentElement().appendChild(raiz).appendChild(registro);
+						document.getDocumentElement().appendChild(registro);
 						crearElemento("curso", curso, registro, document);
 						crearElemento("participantes", numContactos, registro, document);
 
